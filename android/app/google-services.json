@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "845181477025",
+    "project_id": "accord-331dc",
+    "storage_bucket": "accord-331dc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:845181477025:android:5522b33d27c2fb798f10e0",
+        "android_client_info": {
+          "package_name": "com.example.accord"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBpb1b2rpUrtSqBYOh_Y_2SOomZ9PXsNDg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
