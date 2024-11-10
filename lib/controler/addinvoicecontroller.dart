@@ -12,8 +12,10 @@ class AddInvoiceController extends GetxController {
   final date = DateTime.now().obs;
   final items = <InvoiceItem>[].obs;
   final isLoading = false.obs;
+  final selectedItem = 'Item 1'.obs;
+  final itemOptions = ['Item 1', 'Item 2', 'Item 3', 'Item 4'].obs; 
+  final textEditingController = TextEditingController();
 
-  final itemNameController = TextEditingController();
   final quantityController = TextEditingController();
   final rateController = TextEditingController();
 
@@ -47,9 +49,7 @@ class AddInvoiceController extends GetxController {
   }
 
   void addItem() {
-    if (itemNameController.text.isEmpty ||
-        quantityController.text.isEmpty ||
-        rateController.text.isEmpty) {
+    if (quantityController.text.isEmpty || rateController.text.isEmpty) {
       Get.snackbar(
         'Error',
         'Please fill all item details',
@@ -69,7 +69,7 @@ class AddInvoiceController extends GetxController {
       }
 
       final newItem = InvoiceItem(
-        itemName: itemNameController.text.trim(),
+        itemName: selectedItem.value,
         quantity: quantity,
         rate: rate,
         value: quantity * rate,
@@ -78,7 +78,6 @@ class AddInvoiceController extends GetxController {
       items.add(newItem);
 
       // Clear input fields after adding item
-      itemNameController.clear();
       quantityController.clear();
       rateController.clear();
     } catch (e) {
@@ -142,9 +141,8 @@ class AddInvoiceController extends GetxController {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         invoiceNumber: invoiceNumberController.text.trim(),
         date: date.value,
-        partyName: partyNameController.text
-            .trim(), // Use the partyNameController.text.trim() here
-        items: List<InvoiceItem>.from(items), // Create a new list from items
+        partyName: partyNameController.text.trim(),
+        items: List<InvoiceItem>.from(items),
         totalQuantity: totalQty,
         totalValue: totalVal,
       );
@@ -183,7 +181,6 @@ class AddInvoiceController extends GetxController {
     partyNameController.clear();
     date.value = DateTime.now();
     items.clear();
-    itemNameController.clear();
     quantityController.clear();
     rateController.clear();
   }
@@ -192,15 +189,110 @@ class AddInvoiceController extends GetxController {
   void onClose() {
     invoiceNumberController.dispose();
     partyNameController.dispose();
-    itemNameController.dispose();
     quantityController.dispose();
     rateController.dispose();
     super.onClose();
   }
+
   void initializeForEdit(InvoiceModel invoice) {
-  invoiceNumberController.text = invoice.invoiceNumber;
-  partyNameController.text = invoice.partyName;
-  date.value = invoice.date;
-  items.value = List<InvoiceItem>.from(invoice.items);
-}
+    invoiceNumberController.text = invoice.invoiceNumber;
+    partyNameController.text = invoice.partyName;
+    date.value = invoice.date;
+    items.value = List<InvoiceItem>.from(invoice.items);
+  }
+
+  void addItemOption(String newItem) {
+    if (!itemOptions.contains(newItem)) {
+      itemOptions.add(newItem);
+      selectedItem.value = newItem;
+      // Save the new item option to Firebase
+      _saveItemOptionsToFirebase();
+    }
+  }
+
+  void removeItemOption(String item) {
+    if (itemOptions.contains(item)) {
+      itemOptions.remove(item);
+      if (selectedItem.value == item) {
+        selectedItem.value = itemOptions.isNotEmpty ? itemOptions.first : '';
+      }
+      // Remove the item option from Firebase
+      _removeItemOptionFromFirebase(item);
+    }
+  }
+
+  Future<void> _saveItemOptionsToFirebase() async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('item_options')
+          .doc('options')
+          .set({'options': itemOptions});
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to save item options: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Get.isDarkMode ? Colors.red[900] : Colors.red[100],
+        colorText: Get.isDarkMode ? Colors.white : Colors.black,
+      );
+    }
+  }
+
+  Future<void> _removeItemOptionFromFirebase(String item) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('item_options')
+          .doc('options')
+          .get();
+      if (snapshot.exists) {
+        final data = snapshot.data();
+        if (data != null && data['options'] is List<dynamic>) {
+          final options = List<String>.from(data['options']);
+          options.remove(item);
+          await FirebaseFirestore.instance
+              .collection('item_options')
+              .doc('options')
+              .update({'options': options});
+        }
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to remove item option: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Get.isDarkMode ? Colors.red[900] : Colors.red[100],
+        colorText: Get.isDarkMode ? Colors.white : Colors.black,
+      );
+    }
+  }
+
+  Future<void> loadItemOptions() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('item_options')
+          .doc('options')
+          .get();
+      if (snapshot.exists) {
+        final data = snapshot.data();
+        if (data != null && data['options'] is List<dynamic>) {
+          itemOptions.value = List<String>.from(data['options']);
+          selectedItem.value = itemOptions.isNotEmpty ? itemOptions.first : '';
+        }
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to load item options: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Get.isDarkMode ? Colors.red[900] : Colors.red[100],
+        colorText: Get.isDarkMode ? Colors.white : Colors.black,
+      );
+    }
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    loadItemOptions();
+  }
 }

@@ -5,15 +5,13 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 class AddInvoiceView extends GetView<AddInvoiceController> {
-  // ignore: use_super_parameters
-  const AddInvoiceView({Key? key}) : super(key: key);
+  const AddInvoiceView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create Invoice'),
-     
       ),
       body: SafeArea(
         child: Form(
@@ -53,6 +51,8 @@ class AddInvoiceView extends GetView<AddInvoiceController> {
     final isTablet = constraints.maxWidth > ThemeManager.kTabletBreakpoint;
 
     return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -78,18 +78,23 @@ class AddInvoiceView extends GetView<AddInvoiceController> {
                           : constraints.maxWidth - 48,
                   child: TextFormField(
                     controller: controller.invoiceNumberController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Invoice Number',
-                      prefixIcon: Icon(Icons.receipt),
+                      prefixIcon: const Icon(Icons.receipt),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       errorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.red),
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Colors.red),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderSide:
-                            BorderSide(color: Color.fromARGB(255, 0, 0, 0)),
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Colors.black),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Colors.grey),
                       ),
                     ),
                     keyboardType: TextInputType.number,
@@ -110,12 +115,17 @@ class AddInvoiceView extends GetView<AddInvoiceController> {
                   child: Obx(
                     () => TextFormField(
                       readOnly: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Date',
-                        prefixIcon: Icon(Icons.calendar_today),
+                      controller: TextEditingController(
+                        text: DateFormat('dd/MM/yyyy')
+                            .format(controller.date.value),
                       ),
-                      initialValue: DateFormat('dd/MM/yyyy')
-                          .format(controller.date.value),
+                      decoration: InputDecoration(
+                        labelText: 'Date',
+                        prefixIcon: const Icon(Icons.calendar_today),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
                       onTap: () async {
                         final picked = await showDatePicker(
                           context: Get.context!,
@@ -136,9 +146,12 @@ class AddInvoiceView extends GetView<AddInvoiceController> {
                       : constraints.maxWidth - 48,
                   child: TextFormField(
                     controller: controller.partyNameController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Party Name',
-                      prefixIcon: Icon(Icons.person_outline),
+                      prefixIcon: const Icon(Icons.person_outline),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     validator: controller.validatePartyName,
                     onChanged: (value) => controller.partyName.value = value,
@@ -157,13 +170,17 @@ class AddInvoiceView extends GetView<AddInvoiceController> {
     final isTablet = constraints.maxWidth > ThemeManager.kTabletBreakpoint;
 
     return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              spacing: 16,
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 const Text(
                   'Items',
@@ -172,10 +189,139 @@ class AddInvoiceView extends GetView<AddInvoiceController> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                ElevatedButton.icon(
-                  onPressed: controller.addItem,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Item'),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      constraints: BoxConstraints(
+                        maxWidth: isDesktop
+                            ? 300
+                            : isTablet
+                                ? 250
+                                : 200,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Obx(
+                        () => DropdownButton<String>(
+                          value: controller.selectedItem.value,
+                          items: controller.itemOptions.map((item) {
+                            return DropdownMenuItem<String>(
+                              value: item,
+                              child: Container(
+                                constraints: BoxConstraints(
+                                  maxWidth: isDesktop
+                                      ? 220
+                                      : isTablet
+                                          ? 170
+                                          : 120,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        item,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    IconButton(
+                                      constraints: const BoxConstraints(
+                                        minWidth: 24,
+                                        maxWidth: 24,
+                                      ),
+                                      padding: EdgeInsets.zero,
+                                      icon: const Icon(
+                                        Icons.delete_outline,
+                                        size: 20,
+                                      ),
+                                      color: Colors.red,
+                                      onPressed: () =>
+                                          controller.removeItemOption(item),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              controller.selectedItem.value = value;
+                            }
+                          },
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black,
+                          ),
+                          dropdownColor: Colors.white,
+                          elevation: 3,
+                          underline: const SizedBox(),
+                          icon: const Icon(Icons.arrow_drop_down),
+                          isExpanded: false,
+                          hint: const Text('Select Item'),
+                        ),
+                      ),
+                    ),
+                    if (isTablet || isDesktop) ...[
+                      // Only show Create Item button for tablet and desktop
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Get.dialog(
+                            AlertDialog(
+                              title: const Text('Add New Item'),
+                              content: TextField(
+                                controller: controller.textEditingController,
+                                decoration: InputDecoration(
+                                  hintText: 'Enter new item name',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Get.back(),
+                                  child: const Text('Cancel'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    final newItem = controller
+                                        .textEditingController.text
+                                        .trim();
+                                    if (newItem.isNotEmpty) {
+                                      controller.addItemOption(newItem);
+                                      controller.textEditingController.clear();
+                                      Get.back();
+                                    }
+                                  },
+                                  child: const Text('Add'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.add, size: 20),
+                        label: const Text('Create Item'),
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
@@ -190,18 +336,7 @@ class AddInvoiceView extends GetView<AddInvoiceController> {
                       : isTablet
                           ? (constraints.maxWidth - 64) * 0.5
                           : constraints.maxWidth - 48,
-                  child: TextFormField(
-                    controller: controller.itemNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Item Name',
-                      prefixIcon: Icon(Icons.inventory),
-                    ),
-                    // Added text input properties
-                    textInputAction: TextInputAction.next,
-                    keyboardType: TextInputType.text,
-                    enableInteractiveSelection: true,
-                    autofocus: false,
-                  ),
+                  child: _buildCustomDropdown(constraints),
                 ),
                 SizedBox(
                   width: isDesktop
@@ -211,18 +346,18 @@ class AddInvoiceView extends GetView<AddInvoiceController> {
                           : (constraints.maxWidth - 48) * 0.5,
                   child: TextFormField(
                     controller: controller.quantityController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Quantity',
-                      prefixIcon: Icon(Icons.numbers),
+                      prefixIcon: const Icon(Icons.numbers),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    // Added proper keyboard configuration
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                       signed: false,
                     ),
                     textInputAction: TextInputAction.next,
-                    enableInteractiveSelection: true,
-                    autofocus: false,
                   ),
                 ),
                 SizedBox(
@@ -233,98 +368,166 @@ class AddInvoiceView extends GetView<AddInvoiceController> {
                           : (constraints.maxWidth - 48) * 0.5,
                   child: TextFormField(
                     controller: controller.rateController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Rate',
-                      prefixIcon: Icon(Icons.currency_rupee),
+                      prefixIcon: const Icon(Icons.currency_rupee),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    // Added proper keyboard configuration
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                       signed: false,
                     ),
                     textInputAction: TextInputAction.done,
-                    enableInteractiveSelection: true,
-                    autofocus: false,
                     onFieldSubmitted: (_) => controller.addItem(),
+                  ),
+                ),
+                SizedBox(
+                  width: isDesktop
+                      ? (constraints.maxWidth - 80) * 0.2
+                      : constraints.maxWidth - 48,
+                  child: ElevatedButton.icon(
+                    onPressed: controller.addItem,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Item'),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
-            Obx(() => controller.items.isEmpty
-                ? Center(
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 24),
-                        Icon(
-                          Icons.inventory_2_outlined,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No items added yet',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 16,
+            Obx(
+              () => controller.items.isEmpty
+                  ? Center(
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 24),
+                          Icon(
+                            Icons.inventory_2_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
-                    ),
-                  )
-                : SizedBox(
-                    width: double.infinity,
-                    child: Theme(
-                      data: Theme.of(Get.context!).copyWith(
-                        cardTheme: Theme.of(Get.context!).cardTheme.copyWith(
-                              elevation: 0,
+                          const SizedBox(height: 16),
+                          Text(
+                            'No items added yet',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 16,
                             ),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
                       ),
-                      child: Card(
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: DataTable(
-                            headingTextStyle: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                            columns: const [
-                              DataColumn(label: Text('S No')),
-                              DataColumn(label: Text('Item Name')),
-                              DataColumn(label: Text('Quantity')),
-                              DataColumn(label: Text('Rate')),
-                              DataColumn(label: Text('Value')),
-                              DataColumn(label: Text('Action')),
-                            ],
-                            rows: controller.items.asMap().entries.map((entry) {
-                              final index = entry.key;
-                              final item = entry.value;
-                              return DataRow(
-                                cells: [
-                                  DataCell(Text('${index + 1}')),
-                                  DataCell(Text(item.itemName)),
-                                  DataCell(Text(item.quantity.toString())),
-                                  DataCell(
-                                      Text('₹${item.rate.toStringAsFixed(2)}')),
-                                  DataCell(Text(
-                                      '₹${item.value.toStringAsFixed(2)}')),
-                                  DataCell(
-                                    IconButton(
-                                      icon: const Icon(Icons.delete_outline),
-                                      color: Colors.red,
-                                      onPressed: () =>
-                                          controller.removeItem(index),
-                                    ),
+                    )
+                  : Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          headingTextStyle: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          columns: const [
+                            DataColumn(label: Text('S No')),
+                            DataColumn(label: Text('Item Name')),
+                            DataColumn(label: Text('Quantity')),
+                            DataColumn(label: Text('Rate')),
+                            DataColumn(label: Text('Value')),
+                            DataColumn(label: Text('Action')),
+                          ],
+                          rows: controller.items.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final item = entry.value;
+                            return DataRow(
+                              cells: [
+                                DataCell(Text('${index + 1}')),
+                                DataCell(Text(item.itemName)),
+                                DataCell(Text(item.quantity.toString())),
+                                DataCell(
+                                    Text('₹${item.rate.toStringAsFixed(2)}')),
+                                DataCell(
+                                    Text('₹${item.value.toStringAsFixed(2)}')),
+                                DataCell(
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline),
+                                    color: Colors.red,
+                                    onPressed: () =>
+                                        controller.removeItem(index),
                                   ),
-                                ],
-                              );
-                            }).toList(),
-                          ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
                         ),
                       ),
                     ),
-                  )),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCustomDropdown(BoxConstraints constraints) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Obx(
+        () => DropdownButtonFormField<String>(
+          value: controller.selectedItem.value,
+          items: controller.itemOptions.map((item) {
+            return DropdownMenuItem<String>(
+              value: item,
+              child: Text(
+                item,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value != null) {
+              controller.selectedItem.value = value;
+            }
+          },
+          decoration: InputDecoration(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            border: InputBorder.none,
+            prefixIcon: const Icon(Icons.inventory),
+            suffixIcon: controller.selectedItem.value.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      controller.selectedItem.value =
+                          controller.itemOptions.first;
+                    },
+                  )
+                : null,
+          ),
+          style: const TextStyle(
+            fontSize: 16,
+            color: Colors.black,
+          ),
+          dropdownColor: Colors.white,
+          elevation: 3,
+          icon: const Icon(Icons.arrow_drop_down),
+          isExpanded: true,
+          hint: const Text('Select Item'),
         ),
       ),
     );
@@ -332,6 +535,8 @@ class AddInvoiceView extends GetView<AddInvoiceController> {
 
   Widget _buildTotalsSection() {
     return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -376,17 +581,23 @@ class AddInvoiceView extends GetView<AddInvoiceController> {
   Widget _buildTotalItem(String label, String value, IconData icon) {
     return Expanded(
       child: Card(
+        elevation: 1,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: Colors.grey.shade200),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              Icon(icon, size: 24),
+              Icon(icon, size: 24, color: Colors.blue),
               const SizedBox(height: 8),
               Text(
                 label,
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
+                  color: Colors.grey,
                 ),
               ),
               const SizedBox(height: 4),
@@ -420,10 +631,14 @@ class AddInvoiceView extends GetView<AddInvoiceController> {
             : const Icon(Icons.save),
         label: Text(
           controller.isLoading.value ? 'Saving...' : 'Save Invoice',
-          style: const TextStyle(fontSize: 16),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(double.infinity, 56),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          elevation: 2,
         ),
       ),
     );
